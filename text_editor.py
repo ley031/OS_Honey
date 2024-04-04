@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
+import os
 
 class ToolTip:
     def __init__(self, widget, text):
@@ -103,9 +104,11 @@ class TextEditor:
         if file:
             with open(file, "r") as f:
                 text = f.read()
-            text_widget = tk.Text(self.notebook, undo=True)
+                
+            text_widget = tk.Text(self.notebook, undo=True, bg="black", fg="yellow")
             text_widget.insert("1.0", text)
             text_widget.pack(expand=True, fill='both')
+            text_widget.filename = f.name
             self.notebook.add(text_widget, text=file)
 
     def save_file(self, event=None):
