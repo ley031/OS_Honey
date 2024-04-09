@@ -1,7 +1,15 @@
+
+
 import tkinter as tk
 from PIL import Image, ImageTk
 import os
+import speech_recognition as sr
+from gtts import gTTS
+import winsound
+from pydub import AudioSegment
+import pyautogui
 from loading_screen import show_loading_screen
+import threading
 
 class DesktopWallpaper:
     def __init__(self, root):
@@ -46,11 +54,69 @@ class DesktopWallpaper:
         self.canvas.tag_bind("text_editor", "<Button-1>", self.open_text_editor)
         self.canvas.tag_bind("file_manager", "<Button-1>", self.open_file_manager)
 
-    def open_text_editor(self, event):
+        # Initialize speech recognizer
+        self.recognizer = sr.Recognizer()
+
+        # Start listening for commands after 5 seconds
+        threading.Thread(target=self.listen_for_commands).start()
+
+    def open_text_editor(self, event=None):
         os.system("python text_editor.py")  # Assuming text_editor.py contains your text editor code
 
-    def open_file_manager(self, event):
+    def open_file_manager(self,  event=None):
         os.system("explorer")  # Opens the default file explorer
+
+    def listen_for_commands(self):
+        while True:
+            with sr.Microphone() as source:
+                print("Listening for commands...")
+                self.recognizer.adjust_for_ambient_noise(source)
+                audio = self.recognizer.listen(source)
+
+            try:
+                command = self.recognizer.recognize_google(audio)
+                print("You said:", command)
+                self.execute_command(command.lower())
+            except sr.UnknownValueError:
+                print("Could not understand audio. Please try again.")
+            except sr.RequestError:
+                print("Unable to access the Google Speech Recognition API.")
+
+            # Schedule the next listening after 5 seconds
+            # self.root.after(1000, self.listen_for_commands)
+
+    def execute_command(self, command):
+        trigger_word = "please"
+        if trigger_word in command:
+            if "open text editor" in command:
+                self.respond("Opening text editor.")
+                self.open_text_editor()
+                
+                
+            elif "open file manager" in command:
+                self.respond("Opening file manager.")
+                self.open_file_manager()
+                
+                
+            elif "take a screenshot" in command:
+                pyautogui.screenshot("screenshot.png")
+                self.respond("I took a screenshot for you, honey.")
+            elif "exit" in command:
+                self.respond("Goodbye!")
+                self.root.destroy()
+            else:
+                self.respond("Sorry, I'm not sure how to handle that command.")
+        else:
+            self.respond("Honey,please include the word 'please' in your command.")
+
+    def respond(self, response_text):
+        print(response_text)
+        tts = gTTS(text=response_text, lang='en')
+        tts.save("response.mp3")
+        sound = AudioSegment.from_mp3("response.mp3")
+        sound.export("response.wav", format="wav")
+        winsound.PlaySound("response.wav", winsound.SND_FILENAME)
+
 
 def main():
     show_loading_screen()  # Show loading screen
@@ -58,6 +124,7 @@ def main():
     app = DesktopWallpaper(root)
     root.overrideredirect(True)
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()

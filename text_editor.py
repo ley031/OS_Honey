@@ -178,6 +178,13 @@ class TextEditor:
         # Check if there are any tabs left, if not, close the application
         if not self.notebook.tabs():
             self.root.quit()
+    def open_editor(self):
+        print("Opening text editor")  # Add a debug message
+        self.root.deiconify()  # Show the text editor window if it was minimized or hidden
+
+    def close_editor(self):
+        print("Closing text editor")  # Add a debug message
+        self.root.withdraw()  # Hide the text editor window
 
 
 root = tk.Tk()
